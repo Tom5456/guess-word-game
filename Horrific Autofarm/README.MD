@@ -7,3 +7,5 @@ very simple script, all it does is:
 3. Teleport the player whenever they move from that platform
 
 best in small servers
+## !! use at ur own risk i got banned LOL !!
+![ban](https://cdn.discordapp.com/attachments/911335850258886676/935559967270920362/unknown.png)
