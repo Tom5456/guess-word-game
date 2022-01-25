@@ -9,5 +9,7 @@ what this script does:
 - server hop if there is no other players in the server
 
 best in small servers
-## !! use at ur own risk i got banned LOL !!
+## loadstring
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Autofarm/horrificAutofarm.lua",true))()
+### !! use at ur own risk i got banned LOL !!
 ![ban](https://cdn.discordapp.com/attachments/911335850258886676/935559967270920362/unknown.png)
