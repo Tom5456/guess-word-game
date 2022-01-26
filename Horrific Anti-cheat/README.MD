@@ -23,7 +23,7 @@ what this script does:
 best in small servers
 ## loadstring
 ```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Autofarm/horrificAutofarm.lua",true))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Anti-cheat/horrificAutofarm.lua",true))()
 ```
 ### !! use at ur own risk i got banned LOL !!
 ![ban](https://cdn.discordapp.com/attachments/911335850258886676/935559967270920362/unknown.png)
