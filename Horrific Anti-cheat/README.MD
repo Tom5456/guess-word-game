@@ -1,5 +1,17 @@
-# Horrific autofarm
-an autofarm for [Horrific Housing](https://www.roblox.com/games/263761432/Horrific-Housing)
+# Horrific Anti-cheat
+a script for [Horrific Housing](https://www.roblox.com/games/263761432/Horrific-Housing)
+
+features:
+- give u all items
+- give u 1000 eggs
+
+probably gonna add an esp
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Anti-cheat/horrificAnticheat.lua",true))()
+```
+
+# Horrific Autofarm
+horrific anticheat's autofarm but without a gui or toggle [Horrific Housing](https://www.roblox.com/games/263761432/Horrific-Housing)
 
 what this script does:
 1. Create a platform in a random position (math.random(240, 580), math.random(120, 550), math.random(240, 580) and puts it into the Workspace
