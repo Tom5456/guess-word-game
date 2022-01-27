@@ -6,6 +6,9 @@ features:
 - give u 1000 pet eggs
 - access to every cosmetic in the game
 - player esp
+- anti sans
+- autofarm
+- instant ko sword (anvil must be spawned in)
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Anti-cheat/horrificAnticheat.lua",true))()
 ```
