@@ -2,10 +2,10 @@
 a script for [Horrific Housing](https://www.roblox.com/games/263761432/Horrific-Housing)
 
 features:
-- give u all items
-- give u 1000 eggs
-
-probably gonna add an esp
+- give u all free items
+- give u 1000 pet eggs
+- access to every cosmetic in the game
+- player esp
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Anti-cheat/horrificAnticheat.lua",true))()
 ```
