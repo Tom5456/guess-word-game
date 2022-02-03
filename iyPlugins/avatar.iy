@@ -22,8 +22,8 @@ function rm() -- failedmite57926
 	end
 end
 local Plugin = {
-	["PluginName"] = "tall",
-	["PluginDescription"] = "command that makes u tall",
+	["PluginName"] = "avatar stuff (r15)",
+	["PluginDescription"] = "u need to be rthro for bighead",
 	["Commands"] = {
 		["tall"] = {
 			["ListName"] = "tall [height 1 - 5]",
