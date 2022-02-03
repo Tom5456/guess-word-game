@@ -1,0 +1,62 @@
+function rm()
+	for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+		if v:IsA("BasePart") then
+			if v.Name == "Handle" or v.Name == "Head" then
+				if game.Players.LocalPlayer.Character.Head:FindFirstChild("OriginalSize") then
+					game.Players.LocalPlayer.Character.Head.OriginalSize:Destroy()
+				end
+			else
+				for _, attatchment in pairs(v:GetDescendants()) do
+					if attatchment:IsA("Attachment") then
+						if attatchment:FindFirstChild("OriginalPosition") then
+							attatchment.OriginalPosition:Destroy()
+						end
+					end
+				end
+				v:FindFirstChild("OriginalSize"):Destroy()
+				if v:FindFirstChild("AvatarPartScaleType") then
+					v:FindFirstChild("AvatarPartScaleType"):Destroy()
+				end
+			end
+		end
+	end
+end
+local Plugin = {
+	["PluginName"] = "tall",
+	["PluginDescription"] = "command that makes u tall",
+	["Commands"] = {
+		["tall"] = {
+			["ListName"] = "tall [height 1 - 5]",
+			["Description"] = "makes u tall",
+			["Aliases"] = {"height"},
+			["Function"] = function(args, speaker)
+				local delete = {"BodyProportionScale", "BodyHeightScale", "BodyWidthScale", "BodyDepthScale", "HeadScale"}
+				local size = args[1]
+				for i=1, size, 1 do
+					rm()
+					task.wait(0.5)
+					game.Players.LocalPlayer.Character.Humanoid[delete[i]]:Destroy()
+					task.wait(1)
+				end
+			end
+		},
+		["bighead"] = {
+			["ListName"] = "bighead",
+			["Description"] = "makes ur head big",
+			["Aliases"] = {},
+			["Function"] = function(args, speaker)
+				execCmd("noclip", speaker)
+				for i,v in pairs(game.Players.LocalPlayer.Character.Humanoid:GetChildren()) do
+					if string.find(v.Name,"Scale") and v.Name ~= "HeadScale" then
+						repeat task.wait() until game.Players.LocalPlayer.Character.Head:FindFirstChild("OriginalSize")
+						game.Players.LocalPlayer.Character.Head.OriginalSize:Destroy()
+						v:Destroy()
+						game.Players.LocalPlayer.Character.Head:WaitForChild("OriginalSize")
+					end
+				 end
+			end
+		}
+	},
+}
+
+return Plugin
