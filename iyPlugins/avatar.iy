@@ -1,4 +1,4 @@
-function rm()
+function rm() -- failedmite57926
 	for _, v in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
 		if v:IsA("BasePart") then
 			if v.Name == "Handle" or v.Name == "Head" then
