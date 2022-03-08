@@ -1,7 +1,13 @@
+-- services
+local plrs = game:GetService("Players")
+local lighting = game:GetService("Lighting")
+-- constants
 local material = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/MaterialLua/master/Module.lua"))()
 local eggs = {"Furniture", "Ornament", "Spooky", "Death", "House", "Winter", "Easter", "Autumn", "LunarBundle", "HeartBalloons", "WinterChest", "HouseChest"}
-local objectsToIgnore = {"Plate", "NpcSpawn", "PlayerSpawn", "House", "AcidRainFall", "MiniTaco", "Taco", "DuelArena", "snow", "Part", "Snow", "Pavement", "slime"}
+local objectsToIgnore = {"Plate", "NpcSpawn", "PlayerSpawn", "House", "AcidRainFall", "MiniTaco", "Taco", "DuelArena", "snow", "Part", "Snow", "Pavement", "slime", "PatchOfGrass"}
 local platesToIgnore = {"Supermarket", "road", "Pavement", "PatchOfGrass"}
+local weapons = {"Sword", "Hammer", "Jedi Lightsaber", "Katana", "Bat"}
+-- vars
 local pets = {}
 local ornaments = {}
 local materials = {}
@@ -9,19 +15,11 @@ local colours = {}
 local currentMaterial = "SmoothPlastic"
 local reflectance = 0
 local transparency = 0
-local plr = game.Players.LocalPlayer
+local plr = plrs.LocalPlayer
 local plrGui = plr.PlayerGui
 local camera = game:GetService("Workspace").CurrentCamera
 local currentCamera = workspace.CurrentCamera
-local cframeChange
-local autofarmAdded
-local gasterListener
-local paranoiaListener
-local outageListener
-local espEnabled
-local objEspEnabled
-local espAdded
-local plateAdded
+local listeners = {}
 -- make platforms
 function newPlatform(returnInstance: boolean): CFrame | Instance
 	local platform = Instance.new("Part")
@@ -40,15 +38,17 @@ function newPlatform(returnInstance: boolean): CFrame | Instance
 	end
 end
 function randomPlatform()
-	cframeChange:Disconnect()
+	if listeners.cframeChange then
+		listeners.cframeChange:Disconnect()
+	end
 	local original = plr.Character.HumanoidRootPart.CFrame
 	local platform = newPlatform(true)
 	plr.Character.HumanoidRootPart.CFrame = platform.Position + Vector3.new(0, 3, 0)
 	task.wait(0.5)
 	platform:Destroy()
 	plr.Character.HumanoidRootPart.CFrame = original
-	cframeChange = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart"):GetPropertyChangedSignal("CFrame"):Connect(function()
-		game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = plrFrame
+	listeners.cframeChange = plrs.LocalPlayer.Character:WaitForChild("HumanoidRootPart"):GetPropertyChangedSignal("CFrame"):Connect(function()
+		plrs.LocalPlayer.Character.HumanoidRootPart.CFrame = plrFrame
 	end)
 end
 function esp(player)
@@ -77,7 +77,7 @@ function esp(player)
 		local stepped
 		stepped = game:GetService("RunService").RenderStepped:Connect(function()
 			if espEnabled == true then
-				if player.Character ~= nil and player.Character:FindFirstChild("Humanoid") ~= nil and player.Character:FindFirstChild("HumanoidRootPart") ~= nil and player ~= game.Players.LocalPlayer and player.Character.Humanoid.Health > 0 and player.Character:FindFirstChild("Head") then
+				if player.Character ~= nil and player.Character:FindFirstChild("Humanoid") ~= nil and player.Character:FindFirstChild("HumanoidRootPart") ~= nil and player ~= plrs.LocalPlayer and player.Character.Humanoid.Health > 0 and player.Character:FindFirstChild("Head") then
 					local vector, onScreen = camera:worldToViewportPoint(player.Character.HumanoidRootPart.Position)
 					if onScreen then
 						local head = camera:WorldToViewportPoint(player.Character.Head.Position)
@@ -116,6 +116,7 @@ function esp(player)
 	coroutine.wrap(draw)()
 end
 function itemEsp(item)
+	task.wait(0.02)
 	local line = Drawing.new("Line")
 	line.Visible = false
 	line.Color = Color3.fromRGB(255, 0, 0)
@@ -129,6 +130,18 @@ function itemEsp(item)
 	text.Center = true
 	text.Transparency = 1
 	text.Text = item.Name
+	local part
+	if item:IsA("Model") and not item.PrimaryPart then
+		-- grab random part or smth idk
+		local function randomPart()
+			task.wait()
+			part = item:GetChildren()[math.random(#item:GetChildren())]
+			if not part:IsA("BasePart") or not part:IsA("Model") then
+				randomPart()
+			end
+		end
+		randomPart()
+	end
 	local function draw()
 		local stepped
 		stepped = game:GetService("RunService").RenderStepped:Connect(function()
@@ -138,16 +151,6 @@ function itemEsp(item)
 					if item:IsA("Model") and item.PrimaryPart then
 						vector, onScreen = camera:worldToViewportPoint(item.PrimaryPart.Position)
 					elseif item:IsA("Model") and not item.PrimaryPart then
-						-- grab random part or smth idk
-						local part
-						local function randomPart()
-							task.wait()
-							part = item:GetChildren()[math.random(#item:GetChildren())]
-							if not part:IsA("BasePart") or not part:IsA("Model") then
-								randomPart()
-							end
-						end
-						randomPart()
 						vector, onScreen = camera:worldToViewportPoint(part.Position)
 					elseif item:IsA("Model") and #item:GetChildren() == 0 then
 						line.Visible = false
@@ -174,7 +177,6 @@ function itemEsp(item)
 						text.Visible = false
 					end
 				else
-					print(item.Name.." has left the workspace, disconnecting")
 					line.Visible = false
 					text.Visible = false
 					line:Remove()
@@ -206,13 +208,11 @@ function findObjects(plate)
 	if table.find(platesToIgnore, plate.Name) == nil then
 		for _, child in pairs(plate:GetChildren()) do
 			if table.find(objectsToIgnore, child.Name) == nil then
-				-- draw
 				itemEsp(child)
 			end
 		end
 		plate.ChildAdded:Connect(function(child)
 			if table.find(objectsToIgnore, child.Name) == nil then
-				-- draw
 				itemEsp(child)
 			end
 		end)
@@ -235,24 +235,6 @@ local items = ui.New({
 })
 local gameStuff = ui.New({
 	Title = "Game",
-})
-items.Toggle({
-	Text = "Player ESP",
-	Callback = function(state)
-		if state then
-			espEnabled = true
-			for _, v in pairs(game.Players:GetPlayers()) do
-				esp(v)
-			end
-			espAdded = game.Players.PlayerAdded:Connect(function(player)
-				player.CharacterAdded:Wait()
-				esp(player)
-			end)
-		else
-			espEnabled = false
-			if espAdded then espAdded:Disconnect() end
-		end
-	end
 })
 items.Button({
 	Text = "Give all obtainable items",
@@ -369,6 +351,53 @@ items.Dropdown({
 	Options = colours
 })
 gameStuff.Toggle({
+	Text = "Player ESP",
+	Callback = function(state)
+		if state then
+			espEnabled = true
+			for _, v in pairs(plrs:GetPlayers()) do
+				esp(v)
+			end
+			listeners.espAdded = plrs.PlayerAdded:Connect(function(player)
+				player.CharacterAdded:Wait()
+				esp(player)
+			end)
+		else
+			espEnabled = false
+			if listeners.espAdded then listeners.espAdded:Disconnect() end
+		end
+	end
+})
+gameStuff.Toggle({
+	Text = "Show player health",
+	Callback = function(state)
+		if state then
+			listeners.charAdded = {}
+			for _, plr in pairs(game:GetService("Players"):GetPlayers()) do
+				if plr.Character.Humanoid then
+					plr.Character.Humanoid.HealthDisplayDistance = math.huge
+				end
+				local added = plr.CharacterAdded:Connect(function(char)
+					char:WaitForChild("Humanoid").HealthDisplayDistance = math.huge
+				end)
+				table.insert(listeners.charAdded, added)
+			end
+		else
+			for _, plr in pairs(game:GetService("Players"):GetPlayers()) do
+				if plr.Character:FindFirstChild("Humanoid") then
+					plr.Character.Humanoid.HealthDisplayDistance = 100
+				end
+			end
+			if listeners.charAdded then
+				for _, connection in pairs(listeners.charAdded) do
+					connection:Disconnect()
+					connection = nil
+				end
+			end
+		end
+	end
+})
+gameStuff.Toggle({
 	Text = "Object ESP",
 	Callback = function(state)
 		if state then
@@ -376,7 +405,7 @@ gameStuff.Toggle({
 			if game.Workspace:FindFirstChild("Plates") then
 				loopThruPlates()
 			end
-			plateAdded = game.Workspace.ChildAdded:Connect(function(child) -- "expensive" i say as i add yet another workspace listener
+			listeners.plateAdded = game.Workspace.ChildAdded:Connect(function(child) -- "expensive" i say as i add yet another workspace listener
 				if child.Name == "Plates" then
 					task.wait(7)
 					loopThruPlates()
@@ -384,7 +413,7 @@ gameStuff.Toggle({
 			end)
 		else
 			objEspEnabled = false
-			if plateAdded then plateAdded:Disconnect() end
+			if listeners.plateAdded then listeners.plateAdded:Disconnect() end
 		end
 	end
 })
@@ -393,7 +422,7 @@ gameStuff.Toggle({
 	Callback = function(state)
 		if state then
 			-- avoid stuff
-			game.Workspace.ChildAdded:Connect(function(child) -- expensive
+			listeners.avoidDanger = game.Workspace.ChildAdded:Connect(function(child) -- expensive
 				if child.Name == "GasterBlaster" then
 					child:Destroy()
 				elseif child.Name == "Meteor" or child.Name == "coal" then
@@ -405,7 +434,7 @@ gameStuff.Toggle({
 				end
 			end)
 			-- mode voting
-			plrGui.VoteMode:GetPropertyChangedSignal("Enabled"):Connect(function()
+			listeners.autoVote = plrGui.VoteMode:GetPropertyChangedSignal("Enabled"):Connect(function()
 				local options = {}
 				for _, v in pairs(plrGui.VoteMode.Frame.Options_Pool:GetChildren()) do
 					pcall(function()
@@ -422,68 +451,93 @@ gameStuff.Toggle({
 			end)
 			-- put player on platforms
 			plr.Character.HumanoidRootPart.CFrame = plrFrame
-			cframeChange = plr.Character.HumanoidRootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
+			listeners.cframeChange = plr.Character.HumanoidRootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
 				plr.Character.HumanoidRootPart.CFrame = plrFrame
 			end)
-			autofarmAdded = plr.CharacterAdded:Connect(function(char)
-				cframeChange:Disconnect()
-				cframeChange = char:WaitForChild("HumanoidRootPart"):GetPropertyChangedSignal("CFrame"):Connect(function()
+			listeners.autofarmAdded = plr.CharacterAdded:Connect(function(char)
+				listeners.cframeChange:Disconnect()
+				listeners.cframeChange = char:WaitForChild("HumanoidRootPart"):GetPropertyChangedSignal("CFrame"):Connect(function()
 					char.HumanoidRootPart.CFrame = plrFrame
 				end)
 			end)
 		else
-			if cframeChange then cframeChange:Disconnect() end
-			if autofarmAdded then autofarmAdded:Disconnect() end
-			game.Players.LocalPlayer.Character.Head:Destroy()
+			if listeners.cframeChange then listeners.cframeChange:Disconnect() end
+			if listeners.autofarmAdded then listeners.autofarmAdded:Disconnect() end
+			if listeners.avoidDanger then listeners.avoidDanger:Disconnect() end
+			if listeners.autoVote then listeners.autoVote:Disconnect() end
+			plrs.LocalPlayer.Character.Head:Destroy()
 		end
 	end,
 	Enabled = false,
+})
+gameStuff.Toggle({
+	Text = "No melee weapon cooldown",
+	Callback = function(state)
+		if state then
+			listeners.noCooldown = game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
+				if gpe == true then return end
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					for _, item in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+						if table.find(weapons, item.Name) then
+							item.Event:FireServer()
+						end
+					end
+				end
+			end)
+		else
+			if listeners.noCooldown then listeners.noCooldown:Disconnect() end
+		end
+	end
 })
 gameStuff.Toggle({
 	Text = "Delete sans",
 	Callback = function(state)
 		if state then
-			gasterListener = game.Workspace.ChildAdded:Connect(function(child) -- expensive
+			listeners.gasterListener = game.Workspace.ChildAdded:Connect(function(child) -- expensive
 				if child.Name == "GasterBlaster" then
 					child:Destroy()
 				end
 			end)
 		else
-			if gasterListener then gasterListener:Disconnect() end
+			if listeners.gasterListener then listeners.gasterListener:Disconnect() end
 		end
 	end,
 	Enabled = false,
+})
+
+gameStuff.Toggle({
+	Text = "Delete maintenance",
+	Callback = function(state)
+		if state then
+			listeners.outageListener = plr.PlayerGui.ChildAdded:Connect(function(child) -- expensive
+				if child.Name == "MaintenanceUi" then
+					child.Enabled = false
+				end
+			end)
+		else
+			if listeners.outageListener then listeners.soutageListener:Disconnect() end
+		end
+	end
 })
 gameStuff.Toggle({
 	Text = "Delete paranoia",
 	Callback = function(state)
 		if state then
-			paranoiaListener = game.Lighting.ChildAdded:Connect(function(child)
-				print("childadded to lighting")
-				if child.Name == "Atmosphere" then -- idk y :IsA() wont work
-					print("its an atmosphere")
-					child:Destroy()
-					game.Lighting.TimeOfDay = "-09:00:00"
-					game.Lighting.FogEnd = 250
+			local atmosphere = lighting.Atmosphere
+			lighting.TimeOfDay = "-09:00:00"
+			if atmosphere.Density == 0.8 then
+				atmosphere.Density = 0.4
+			end
+			listeners.paranoia = atmosphere:GetPropertyChangedSignal("Density"):Connect(function()
+				if atmosphere.Density == 0.8 then
+					atmosphere.Density = 0.4
+					--lighting.ClockTime = -9
+					lighting.TimeOfDay = "-09:00:00"
+					lighting.FogEnd = 250
 				end
 			end)
 		else
-			if paranoiaListener then paranoiaListener:Disconnect() end
-		end
-	end
-})
-gameStuff.Toggle({
-	Text = "Delete maintenance",
-	Callback = function(state)
-		if state then
-			outageListener = plr.PlayerGui.ChildAdded:Connect(function(child) -- expensive
-				if child.Name == "MaintenanceUi" then
-					task.wait() -- otherwise roblox throws a baby fit
-					child:Destroy()
-				end
-			end)
-		else
-			if outageListener then outageListener:Disconnect() end
+			if listeners.paranoia then listeners.paranoia:Disconnect() end
 		end
 	end
 })
@@ -496,13 +550,29 @@ gameStuff.Button({
 				anvilExists = true
 			end
 		end
-		game:GetService("ReplicatedStorage").EventRemotes.ForgeUltimateSword:FireServer("Cloner", "Cloner", "Cloner")
 		if not anvilExists then
 			ui.Banner({
 				Text = "An anvil needs to be spawned in for this to work."
 			})
+			return
 		end
+		game:GetService("ReplicatedStorage").EventRemotes.ForgeUltimateSword:FireServer("Cloner", "Cloner", "Cloner")
 	end,
+})
+gameStuff.Button({
+	Text = "Delete all spleef tiles",
+	Callback = function()
+		if game.Workspace:FindFirstChild("spleef gamemode") then
+			for _, tile in pairs(game:GetService("Workspace")["spleef gamemode"]:GetChildren()) do
+				firetouchinterest(game.Players.LocalPlayer.Character.Head, tile, 1)
+				firetouchinterest(game.Players.LocalPlayer.Character.Head, tile, 0)
+			end
+		else
+			ui.Banner({
+				Text = "The gamemode needs to be spleef for this to work"
+			})
+		end
+	end
 })
 gameStuff.Button({
 	Text = "Potion",
