@@ -9,6 +9,7 @@ features:
 - anti sans
 - autofarm
 - instant ko sword (anvil must be spawned in)
+- i cba to keep this up to date just check the script for any new features
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Anti-cheat/horrificAnticheat.lua",true))()
 ```
