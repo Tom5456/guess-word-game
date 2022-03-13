@@ -230,11 +230,11 @@ local ui = material.Load({
 	Style = 3,
 	Theme = "Dark",
 })
-local items = ui.New({
-	Title = "Cosmetics",
-})
 local gameStuff = ui.New({
 	Title = "Game",
+})
+local items = ui.New({
+	Title = "Cosmetics",
 })
 items.Button({
 	Text = "Give all obtainable items",
@@ -465,7 +465,6 @@ gameStuff.Toggle({
 			if listeners.autofarmAdded then listeners.autofarmAdded:Disconnect() end
 			if listeners.avoidDanger then listeners.avoidDanger:Disconnect() end
 			if listeners.autoVote then listeners.autoVote:Disconnect() end
-			plrs.LocalPlayer.Character.Head:Destroy()
 		end
 	end,
 	Enabled = false,
@@ -478,7 +477,10 @@ gameStuff.Toggle({
 				if gpe == true then return end
 				if input.UserInputType == Enum.UserInputType.MouseButton1 then
 					for _, item in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-						if table.find(weapons, item.Name) then
+						--[[if table.find(weapons, item.Name) then
+							item.Event:FireServer()
+						end--]]
+						if item:FindFirstChild("Event") then
 							item.Event:FireServer()
 						end
 					end
@@ -515,7 +517,7 @@ gameStuff.Toggle({
 				end
 			end)
 		else
-			if listeners.outageListener then listeners.soutageListener:Disconnect() end
+			if listeners.outageListener then listeners.outageListener:Disconnect() end
 		end
 	end
 })
@@ -525,19 +527,60 @@ gameStuff.Toggle({
 		if state then
 			local atmosphere = lighting.Atmosphere
 			lighting.TimeOfDay = "-09:00:00"
-			if atmosphere.Density == 0.8 then
+			if math.floor(atmosphere.Density * 10) == 8 then
 				atmosphere.Density = 0.4
 			end
 			listeners.paranoia = atmosphere:GetPropertyChangedSignal("Density"):Connect(function()
-				if atmosphere.Density == 0.8 then
+				if math.floor(atmosphere.Density * 10) == 8 then
+					task.wait(0.1)
 					atmosphere.Density = 0.4
-					--lighting.ClockTime = -9
 					lighting.TimeOfDay = "-09:00:00"
 					lighting.FogEnd = 250
+					game.Workspace.Terrain.Clouds.Color = Color3.new(1, 1, 1)
 				end
 			end)
 		else
 			if listeners.paranoia then listeners.paranoia:Disconnect() end
+		end
+	end
+})
+gameStuff.Toggle({
+	Text = "Safety net",
+	Callback = function(state)
+		if state then
+			local part = Instance.new("Part")
+			part.Size = Vector3.new(500, 1, 500)
+			part.Position = Vector3.new(0, -5, 0)
+			part.Anchored = true
+			part.Transparency = 1
+			part.Name = "safety net"
+			part.Parent = game.Workspace
+		else
+			if not game.Workspace:FindFirstChild("safety net") then return end
+			game.Workspace:FindFirstChild("safety net"):Destroy()
+		end
+	end
+})
+gameStuff.Toggle({
+	Text = "Auto claim gifts",
+	Callback = function(state)
+		if state then
+			if not fireproximityprompt then
+				ui.Banner({
+					Text = "Unsupported exploit: missing fireproximityprompt"
+				})
+				return
+			end
+			listeners.autoClaim = game.Workspace.DescendantAdded:Connect(function(descendant) -- how to kill a low end pc's performance 101
+				if descendant.Name == "gift" then
+					descendant:WaitForChild("ProximityPrompt"):GetPropertyChangedSignal("Enabled"):Wait()
+					if descendant.ProximityPrompt.Enabled then
+						fireproximityprompt(descendant.ProximityPrompt, 2)
+					end
+				end
+			end)
+		else
+			if listeners.autoClaim then listeners.autoClaim:Disconnect() return end
 		end
 	end
 })
