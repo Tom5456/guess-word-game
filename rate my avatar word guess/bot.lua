@@ -59,7 +59,7 @@ local function trim(str)
 end
 local function updateSign(text: string, category: string, round: number, timeLeft: number, icon: number)
 	boothUpdate:FireServer("Update", {
-		["DescriptionText"] = "[🕹️] word guess testing ("..tostring(round).."/"..tostring(rounds)..")\n[🔤] "..text.."\ncategory: "..category.."\n[⏰]"..timeLeft,
+		["DescriptionText"] = "[🕹️] word guess ("..tostring(round).."/"..tostring(rounds)..")\n[🔤] "..text.."\ncategory: "..category.."\n[⏰]"..timeLeft,
 		["ImageId"] = icon,
 	})
 end
