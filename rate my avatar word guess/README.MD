@@ -2,3 +2,7 @@
 a bot for rate [rate my avatar](https://www.roblox.com/games/6708206173/Rate-My-Avatar)
 
 its word guess
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/rate%20my%20avatar%20word%20guess/bot.lua", true))()
+```
