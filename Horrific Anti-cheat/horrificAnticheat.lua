@@ -176,7 +176,7 @@ end
 local plrFrame = newPlatform()
 local ui = material.Load({
 	Title = "Horrific Anti-cheat",
-	Style = 3,
+	Style = 1,
 	Theme = "Dark",
 })
 local main = ui.New({
@@ -190,6 +190,27 @@ local espPage = ui.New({
 })
 local cosmetics = ui.New({
 	Title = "Cosmetics",
+})
+local credits = ui.New({
+	Title = "Credits"
+})
+cosmetics.Button({
+	Text = "Fix background music",
+	Callback = function()
+		if not getsynasset and not getcustomasset then
+			ui.Banner({
+				Text = "Incompatible exploit, missing getcustomasset"
+			})
+		end
+		if not isfile("hh_bgm.mp3") then
+			local raw = syn.request({
+				Url = "https://cdn.discordapp.com/attachments/911335850258886676/956687633831055430/hh_bgm.mp3",
+				Method = "GET"
+			})
+			writefile("hh_bgm.mp3", raw.Body)
+		end
+		workspace.Idle.SoundId = getsynasset("hh_bgm.mp3")
+	end
 })
 cosmetics.Button({
 	Text = "Give all obtainable items",
@@ -438,7 +459,7 @@ main.Toggle({
 	Text = "Anti maintenance",
 	Callback = function(state)
 		if state then
-			listeners.outageListener = plr.PlayerGui.ChildAdded:Connect(function(child) -- expensive
+			listeners.outageListener = plrGui.ChildAdded:Connect(function(child) -- expensive
 				if child.Name == "MaintenanceUi" then
 					task.wait()
 					child:Destroy()
@@ -472,6 +493,7 @@ main.Toggle({
 			listeners.noSweeper = game.Workspace.ChildAdded:Connect(function(child)
 				if child.Name == "Spinner" then
 					task.wait()
+					print("destroying "..child.Name)
 					child:Destroy()
 				end
 			end)
@@ -486,6 +508,77 @@ main.Toggle({
 			})
 		end
 	}
+})
+main.Toggle({
+	Text = "Delete flood",
+	Callback = function(state)
+		if state then
+			listeners.noAcid = game.Workspace.ChildAdded:Connect(function(child)
+				if child.Name == "Kill" then
+					task.wait()
+					print("destroying "..child.Name)
+					child:Destroy()
+				end
+			end)
+		else
+			if listeners.noAcid then listeners.noAcid:Disconnect() end
+		end
+	end,
+	Menu = {
+		Info = function()
+			ui.Banner({
+				Text = "Destroy's the acid flood"
+			})
+		end
+	}
+})
+main.Toggle({
+	Text = "Delete slime",
+	Callback = function(state)
+		if state then
+			listeners.noSlime = game.Workspace.DescendantAdded:Connect(function(descendant)
+				if descendant.Name == "slime" then
+					task.wait()
+					print("destroying "..descendant.Name)
+					descendant:Destroy()
+				end
+			end)
+		else
+			if listeners.noSlime then listeners.noSlime:Disconnect() end
+		end
+	end
+})
+main.Toggle({
+	Text = "Delete ice spike",
+	Callback = function(state)
+		if state then
+			listeners.noSlime = game.Workspace.DescendantAdded:Connect(function(descendant)
+				if descendant.Name == "spike" then
+					task.wait()
+					print("destroying "..descendant.Name)
+					descendant:Destroy()
+				end
+			end)
+		else
+			if listeners.noSpike then listeners.noSpike:Disconnect() end
+		end
+	end
+})
+main.Toggle({
+	Text = "Delete gas",
+	Callback = function(state)
+		if state then
+			listeners.noGas = game.Workspace.DescendantAdded:Connect(function(descendant)
+				if descendant.Name == "Gas" then
+					task.wait()
+					print("destroying "..descendant.Name)
+					descendant:Destroy()
+				end
+			end)
+		else
+			if listeners.noGas then listeners.noGas:Disconnect() end
+		end
+	end
 })
 main.Toggle({
 	Text = "Safety net",
@@ -552,7 +645,7 @@ fun.Button({
 			return
 		end
 		if game.Workspace:FindFirstChild("spleef gamemode") then
-			for _, tile in pairs(game:GetService("Workspace")["spleef gamemode"]:GetChildren()) do
+			for _, tile in ipairs(game:GetService("Workspace")["spleef gamemode"]:GetChildren()) do
 				firetouchinterest(plr.Character.Head, tile, 1)
 				firetouchinterest(plr.Character.Head, tile, 0)
 			end
@@ -560,6 +653,23 @@ fun.Button({
 			ui.Banner({
 				Text = "The gamemode needs to be spleef for this to work"
 			})
+		end
+	end
+})
+fun.Button({
+	Text = "Trigger all mines",
+	Callback = function()
+		if not firetouchinterest then
+			ui.Banner({
+				Text = "Unsupported exploit: missing firetouchinterest"
+			})
+		end
+		for _, item in pairs(workspace:GetChildren()) do
+			if item.Name == "Handle" and item:FindFirstChild("Beep") then
+				firetouchinterest(plr.Character.Head, item, 1)
+				task.wait()
+				firetouchinterest(plr.Character.Head, item, 0)
+			end
 		end
 	end
 })
@@ -625,4 +735,19 @@ espPage.Toggle({
 			if listeners.plateAdded then listeners.plateAdded:Disconnect() end
 		end
 	end
+})
+credits.Button({
+	Text = "Scripting: swat turret"
+})
+credits.Button({
+	Text = "Kiriot22 esp lib",
+	Callback = function()
+		setclipboard("https://v3rmillion.net/showthread.php?tid=1088719")
+		ui.Banner({
+			Text = "Copied link to clipboard"
+		})
+	end
+})
+credits.Button({
+	Text = "Ideas: swat turret & EnderChicken"
 })
