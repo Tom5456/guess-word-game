@@ -185,7 +185,7 @@ local credits = ui.New({
 	Title = "Credits"
 })
 cosmetics.Button({
-	Text = "Fix background music",
+	Text = "Use old background music", -- they updated it literally rn lmao
 	Callback = function()
 		if not getsynasset and not getcustomasset then
 			ui.Banner({
@@ -199,7 +199,8 @@ cosmetics.Button({
 			})
 			writefile("hh_bgm.mp3", raw.Body)
 		end
-		workspace.Idle.SoundId = getsynasset("hh_bgm.mp3")
+		workspace.Music.Lobby.SoundId = getsynasset("hh_bgm.mp3")
+		workspace.Music.Playing.SoundId = getsynasset("hh_bgm.mp3")
 	end
 })
 cosmetics.Button({
@@ -427,6 +428,19 @@ main.Toggle({
 	}
 })
 main.Toggle({
+	Text = "Delete lava",
+	Callback = function(state)
+		toggleDestroyWhenAddedToWorkspace("LavaPlate", state)
+	end,
+	Menu = {
+		Info = function()
+			ui.Banner({
+				Text = "Destroys the lava in the lava gamemode"
+			})
+		end
+	}
+})
+main.Toggle({
 	Text = "Delete flood",
 	Callback = function(state)
 		toggleDestroyWhenAddedToWorkspace("Kill", state)
@@ -548,6 +562,35 @@ fun.Button({
 				firetouchinterest(plr.Character.Head, item, 0)
 			end
 		end
+	end
+})
+fun.Button({
+	Text = "Open all doors",
+	Callback = function()
+		if not fireclickdetector then
+			ui.Banner({
+				Text = "Unsupported exploit: missing fireclickdetector"
+			})
+		end
+		for _, door in pairs(workspace:GetDescendants()) do
+			if door.Name == "Doors" then
+				fireclickdetector(door.ClickDetector)
+			end
+		end
+	end
+})
+fun.Button({
+	Text = "Open vending machine",
+	Callback = function()
+		if not fireclickdetector then
+			ui.Banner({
+				Text = "Unsupported exploit: missing fireclickdetector"
+			})
+		end
+		local detector = workspace.OtherObjects.OpenVendingMachine.OpenVendingMachine.ClickDetector
+		detector.MaxActivationDistance = 1000
+		fireclickdetector(detector)
+		detector.MaxActivationDistance = 15
 	end
 })
 fun.Button({
