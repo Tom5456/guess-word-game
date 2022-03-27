@@ -9,6 +9,7 @@ local esp = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
 local EGGS = {"Furniture", "Ornament", "Spooky", "Death", "House", "Winter", "Easter", "Autumn", "LunarBundle", "HeartBalloons", "WinterChest", "HouseChest"}
 local OBJECTS_TO_IGNORE = {"Plate", "NpcSpawn", "PlayerSpawn", "House", "AcidRainFall", "MiniTaco", "Taco", "DuelArena", "snow", "Part", "Snow", "Pavement", "slime", "PatchOfGrass"}
 local PLATES_TO_IGNORE = {"Supermarket", "road", "Pavement", "PatchOfGrass"}
+local AUDIO_BLACKLIST = {"Climbing", "Died", "GettingUp", "Swimming", "Jumping", "Landing", "Splash", "FreeFalling", "Running"}
 -- vars
 local pets = {}
 local ornaments = {}
@@ -33,36 +34,6 @@ function resetLighting()
 	lighting.TimeOfDay = "-09:00:00"
 	lighting.FogEnd = 250
 	game.Workspace.Terrain.Clouds.Color = Color3.new(1, 1, 1)
-end
-function newPlatform(returnInstance: boolean): CFrame | Instance
-	local platform = Instance.new("Part")
-	platform.Position = Vector3.new(math.random(240, 580), math.random(120, 550), math.random(240, 580))
-	platform.Size = Vector3.new(20, 1, 20)
-	platform.Anchored = true
-	platform.Parent = game.Workspace
-	local plrFrame = CFrame.new(
-		Vector3.new(platform.Position.X, platform.Position.Y + 3, platform.Position.Z),
-		Vector3.new(0, 0, 0)
-	)
-	if returnInstance then
-		return platform
-	else
-		return plrFrame
-	end
-end
-function randomPlatform()
-	if listeners.cframeChange then
-		listeners.cframeChange:Disconnect()
-	end
-	local original = plr.Character.HumanoidRootPart.CFrame
-	local platform = newPlatform(true)
-	plr.Character.HumanoidRootPart.CFrame = platform.Position + Vector3.new(0, 3, 0)
-	task.wait(0.5)
-	platform:Destroy()
-	plr.Character.HumanoidRootPart.CFrame = original
-	listeners.cframeChange = plr.Character:WaitForChild("HumanoidRootPart"):GetPropertyChangedSignal("CFrame"):Connect(function()
-		plr.Character.HumanoidRootPart.CFrame = plrFrame
-	end)
 end
 function itemEsp(item)
 	task.wait(0.02)
@@ -173,7 +144,6 @@ function loopThruPlates()
 		findObjects(plate)
 	end
 end
-local plrFrame = newPlatform()
 local ui = material.Load({
 	Title = "Horrific Anti-cheat",
 	Style = 1,
@@ -325,59 +295,6 @@ cosmetics.Dropdown({
 		replicatedStorage.HouseColour:FireServer(plrGui.HouseColour.Frame.Base.House.Colours.Frame[value]["Properties"].Colour.Value)
 	end,
 	Options = colours
-})
-main.Toggle({
-	Text = "Autofarm",
-	Callback = function(state)
-		if state then
-			-- avoid stuff
-			listeners.avoidDanger = game.Workspace.ChildAdded:Connect(function(child) -- expensive
-				if child.Name == "GasterBlaster" then
-					child:Destroy()
-				elseif child.Name == "Meteor" or child.Name == "coal" then
-					randomPlatform()
-				elseif child.Name == "Firework" then
-					if (child.Fireworks.Position - plr.Character.HumanoidRootPart.Position).Magnitude < 20 then
-						randomPlatform()
-					end
-				end
-			end)
-			-- mode voting
-			listeners.autoVote = plrGui.VoteMode:GetPropertyChangedSignal("Enabled"):Connect(function()
-				task.wait(0.1)
-				local options = {}
-				for _, v in pairs(plrGui.VoteMode.Frame.Options_Pool:GetChildren()) do
-					pcall(function()
-						if v.Visible == true then
-							table.insert(options, v.Name)
-						end
-					end)
-				end
-				for _, v in pairs(options) do
-					if v == "Rapid" or v == "OnePlate" or v == "1hp" then -- prefer rapid or oneplate because they're short
-						replicatedStorage.VoteGameMode:FireServer(v)
-					end
-				end
-			end)
-			-- put player on platforms
-			plr.Character.HumanoidRootPart.CFrame = plrFrame
-			listeners.cframeChange = plr.Character.HumanoidRootPart:GetPropertyChangedSignal("CFrame"):Connect(function()
-				plr.Character.HumanoidRootPart.CFrame = plrFrame
-			end)
-			listeners.autofarmAdded = plr.CharacterAdded:Connect(function(char)
-				listeners.cframeChange:Disconnect()
-				listeners.cframeChange = char:WaitForChild("HumanoidRootPart"):GetPropertyChangedSignal("CFrame"):Connect(function()
-					char.HumanoidRootPart.CFrame = plrFrame
-				end)
-			end)
-		else
-			if listeners.cframeChange then listeners.cframeChange:Disconnect() end
-			if listeners.autofarmAdded then listeners.autofarmAdded:Disconnect() end
-			if listeners.avoidDanger then listeners.avoidDanger:Disconnect() end
-			if listeners.autoVote then listeners.autoVote:Disconnect() end
-		end
-	end,
-	Enabled = false,
 })
 main.Toggle({
 	Text = "Show player health",
@@ -684,10 +601,9 @@ fun.Button({
 	Text = "Annoy everyone",
 	Callback = function()
 		for _, sound in pairs(game:GetDescendants()) do
-			if sound:FindFirstAncestor("ReplicatedStorage") or sound:FindFirstAncestor("PlayerGui") then return end
-			if sound:IsA("Sound") then
-			  sound:Play()
-			end
+			if not sound:IsA("Sound") then continue end
+			if sound:FindFirstAncestor("ReplicatedStorage") or sound:FindFirstAncestor("PlayerGui") or sound:FindFirstAncestor("StarterGui") or table.find(AUDIO_BLACKLIST, sound.Name) then continue end
+			sound:Play()
 		end
 	end,
 	Menu = {
