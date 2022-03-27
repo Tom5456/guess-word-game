@@ -24,18 +24,31 @@ local plr = plrs.LocalPlayer
 local plrGui = plr.PlayerGui
 local camera = game.Workspace.CurrentCamera
 local listeners = {}
+local toDestroy = {}
 esp.Names = true
 esp.TeamColor = false
 esp.Color = Color3.fromRGB(0, 255, 0)
 -- functions
-function resetLighting()
+local function resetLighting()
 	print("resetting lighting...")
 	lighting.Atmosphere.Density = 0.4
 	lighting.TimeOfDay = "-09:00:00"
 	lighting.FogEnd = 250
 	game.Workspace.Terrain.Clouds.Color = Color3.new(1, 1, 1)
 end
-function itemEsp(item)
+local function toggleDestroyWhenAddedToWorkspace(name: string, toggle: boolean)
+	if toggle then
+		if table.find(toDestroy, name) then
+			warn(name.." was already in toDestroy, returning")
+			return
+		end
+		table.insert(toDestroy, name)
+	else
+		assert(not table.find(toDestroy, name), name.." was not in toDestroy")
+		table.remove(toDestroy, table.find(toDestroy, name))
+	end
+end
+local function itemEsp(item)
 	task.wait(0.02)
 	local line = Drawing.new("Line")
 	line.Visible = false
@@ -124,7 +137,7 @@ function itemEsp(item)
 	end
 	coroutine.wrap(draw)()
 end
-function findObjects(plate)
+local function findObjects(plate)
 	if table.find(PLATES_TO_IGNORE, plate.Name) == nil then
 		for _, child in pairs(plate:GetChildren()) do
 			if table.find(OBJECTS_TO_IGNORE, child.Name) == nil then
@@ -138,12 +151,19 @@ function findObjects(plate)
 		end)
 	end
 end
-function loopThruPlates()
+local function loopThruPlates()
 	if not game.Workspace:FindFirstChild("Plates") then error("plates folder does not exist in workspace, make sure it is in workspace before running loopThruPlates()") end -- expect plates folder to exist
 	for _, plate in pairs(game.Workspace:FindFirstChild("Plates"):GetChildren()) do
 		findObjects(plate)
 	end
 end
+workspace.DescendantAdded:Connect(function(descendant)
+	if table.find(toDestroy, descendant.Name) then
+		task.wait()
+		print("destroying "..descendant.Name)
+		descendant:Destroy()
+	end
+end)
 local ui = material.Load({
 	Title = "Horrific Anti-cheat",
 	Style = 1,
@@ -351,16 +371,7 @@ main.Toggle({
 main.Toggle({
 	Text = "Anti sans",
 	Callback = function(state)
-		if state then
-			listeners.gasterListener = game.Workspace.ChildAdded:Connect(function(child) -- expensive
-				if child.Name == "GasterBlaster" then
-					task.wait()
-					child:Destroy()
-				end
-			end)
-		else
-			if listeners.gasterListener then listeners.gasterListener:Disconnect() end
-		end
+		toggleDestroyWhenAddedToWorkspace("GasterBlaster", state)
 	end,
 	Menu = {
 		Info = function()
@@ -371,7 +382,6 @@ main.Toggle({
 	},
 	Enabled = false,
 })
-
 main.Toggle({
 	Text = "Anti maintenance",
 	Callback = function(state)
@@ -406,22 +416,12 @@ main.Toggle({
 main.Toggle({
 	Text = "Delete sweeper",
 	Callback = function(state)
-		if state then
-			listeners.noSweeper = game.Workspace.ChildAdded:Connect(function(child)
-				if child.Name == "Spinner" then
-					task.wait()
-					print("destroying "..child.Name)
-					child:Destroy()
-				end
-			end)
-		else
-			if listeners.noSweeper then listeners.noSweeper:Disconnect() end
-		end
+		toggleDestroyWhenAddedToWorkspace("Spinner", state)
 	end,
 	Menu = {
 		Info = function()
 			ui.Banner({
-				Text = "Destroy's the spinner on the sweeper gamemode"
+				Text = "Destroys the spinner on the sweeper gamemode"
 			})
 		end
 	}
@@ -429,22 +429,12 @@ main.Toggle({
 main.Toggle({
 	Text = "Delete flood",
 	Callback = function(state)
-		if state then
-			listeners.noAcid = game.Workspace.ChildAdded:Connect(function(child)
-				if child.Name == "Kill" then
-					task.wait()
-					print("destroying "..child.Name)
-					child:Destroy()
-				end
-			end)
-		else
-			if listeners.noAcid then listeners.noAcid:Disconnect() end
-		end
+		toggleDestroyWhenAddedToWorkspace("Kill", state)
 	end,
 	Menu = {
 		Info = function()
 			ui.Banner({
-				Text = "Destroy's the acid flood"
+				Text = "Destroys the acid flood"
 			})
 		end
 	}
@@ -452,50 +442,20 @@ main.Toggle({
 main.Toggle({
 	Text = "Delete slime",
 	Callback = function(state)
-		if state then
-			listeners.noSlime = game.Workspace.DescendantAdded:Connect(function(descendant)
-				if descendant.Name == "slime" then
-					task.wait()
-					print("destroying "..descendant.Name)
-					descendant:Destroy()
-				end
-			end)
-		else
-			if listeners.noSlime then listeners.noSlime:Disconnect() end
-		end
+		toggleDestroyWhenAddedToWorkspace("slime", state)
 	end
 })
 main.Toggle({
 	Text = "Delete ice spike",
 	Callback = function(state)
-		if state then
-			listeners.noSlime = game.Workspace.DescendantAdded:Connect(function(descendant)
-				if descendant.Name == "spike" then
-					task.wait()
-					print("destroying "..descendant.Name)
-					descendant:Destroy()
-				end
-			end)
-		else
-			if listeners.noSpike then listeners.noSpike:Disconnect() end
-		end
+		toggleDestroyWhenAddedToWorkspace("spike", state)
 	end
 })
 main.Toggle({
 	Text = "Delete gas",
 	Callback = function(state)
-		if state then
-			listeners.noGas = game.Workspace.DescendantAdded:Connect(function(descendant)
-				if descendant.Name == "Gas" then
-					task.wait()
-					print("destroying "..descendant.Name)
-					descendant:Destroy()
-				end
-			end)
-		else
-			if listeners.noGas then listeners.noGas:Disconnect() end
-		end
-	end
+		toggleDestroyWhenAddedToWorkspace("Gas", state)
+	end,
 })
 main.Toggle({
 	Text = "Safety net",
