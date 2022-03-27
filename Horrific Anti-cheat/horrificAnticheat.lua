@@ -38,13 +38,23 @@ local function resetLighting()
 end
 local function toggleDestroyWhenAddedToWorkspace(name: string, toggle: boolean)
 	if toggle then
+		if
+			workspace:FindFirstChild(name, true) and
+			not workspace:FindFirstChild(name, true):IsA("RemoteEvent") and
+			not workspace:FindFirstChild(name, true):IsA("RemoteFunction")
+		then
+			workspace:FindFirstChild(name, true):Destroy()
+		end
 		if table.find(toDestroy, name) then
 			warn(name.." was already in toDestroy, returning")
 			return
 		end
 		table.insert(toDestroy, name)
 	else
-		assert(not table.find(toDestroy, name), name.." was not in toDestroy")
+		if not table.find(toDestroy, name) then
+			warn(name.." was not in toDestroy")
+			return
+		end
 		table.remove(toDestroy, table.find(toDestroy, name))
 	end
 end
@@ -158,7 +168,10 @@ local function loopThruPlates()
 	end
 end
 workspace.DescendantAdded:Connect(function(descendant)
-	if table.find(toDestroy, descendant.Name) then
+	if table.find(toDestroy, descendant.Name) and
+		not descendant:IsA("RemoteEvent") and
+		not descendant:IsA("RemoteFunction")
+	then
 		task.wait()
 		print("destroying "..descendant.Name)
 		descendant:Destroy()
@@ -333,7 +346,7 @@ main.Toggle({
 			end
 		else
 			for _, plr in pairs(game:GetService("Players"):GetPlayers()) do
-				if plr.Character:FindFirstChild("Humanoid") then
+				if plr.Character and plr.Character:FindFirstChild("Humanoid") then
 					plr.Character.Humanoid.HealthDisplayDistance = 100
 					plr.Character.Humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOn
 				end
@@ -494,6 +507,25 @@ main.Toggle({
 			})
 		end
 	}
+})
+main.Button({
+	Text = "Escape black hole",
+	Callback = function()
+		if not workspace:FindFirstChild("Portal") then
+			ui.Banner({
+				Text = "There needs to be a black hole spawned in for this to work"
+			})
+			return
+		end
+		local portal = workspace.Portal:FindFirstChild("EscapePortal")
+		if firetouchinterest then
+			firetouchinterest(plr.Character.Head, portal, 1)
+			task.wait()
+			firetouchinterest(plr.Character.Head, portal, 0)
+		else
+			plr.Character.HumanoidRootPart.CFrame = portal.CFrame
+		end
+	end
 })
 main.Button({
 	Text = "Anti gun damage",
