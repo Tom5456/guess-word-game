@@ -5,6 +5,7 @@ local material = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinl
 -- consts
 local connections = replicatedStorage.Connections
 local lobby = workspace.lobby
+local landed = connections.Landed
 -- vars
 local trails = {}
 local pets = {}
@@ -52,9 +53,9 @@ main.Toggle({
 	Text = "Invincible",
 	Callback = function(state)
 		if state then
-			connections.Landed.Parent = replicatedStorage
+			landed.Parent = replicatedStorage
 		else
-			connections.Landed.Parent = replicatedStorage.Connections
+			landed.Parent = connections
 		end
 	end
 })
