@@ -6,7 +6,7 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local material = loadstring(game:HttpGet("https://raw.githubusercontent.com/Kinlei/MaterialLua/master/Module.lua"))()
 local esp = loadstring(game:HttpGet("https://kiriot22.com/releases/ESP.lua"))()
 -- constants
-local EGGS = {"Furniture", "Ornament", "Spooky", "Death", "House", "Winter", "Easter", "Autumn", "LunarBundle", "HeartBalloons", "WinterChest", "HouseChest"}
+local EGGS = {"Furniture", "Ornament", "Spooky", "Death", "House", "Winter", "Easter", "Autumn", "WinterChest", "HouseChest"}
 local OBJECTS_TO_IGNORE = {"Plate", "NpcSpawn", "PlayerSpawn", "House", "AcidRainFall", "MiniTaco", "Taco", "DuelArena", "snow", "Part", "Snow", "Pavement", "slime", "PatchOfGrass"}
 local PLATES_TO_IGNORE = {"Supermarket", "road", "Pavement", "PatchOfGrass"}
 local AUDIO_BLACKLIST = {"Climbing", "Died", "GettingUp", "Swimming", "Jumping", "Landing", "Splash", "FreeFalling", "Running"}
@@ -15,7 +15,7 @@ local pets = {}
 local ornaments = {}
 local materials = {}
 local colours = {}
-local config = {
+local houseConfig = {
 	currentMaterial = "SmoothPlastic",
 	reflectance = 0,
 	transparency = 0
@@ -205,6 +205,15 @@ cosmetics.Button({
 				Text = "Incompatible exploit, missing getcustomasset"
 			})
 		end
+		local music
+		for _, folder in pairs(workspace:GetChildren()) do
+			if not folder:IsA("Folder") then continue end
+			if folder.Name == "Music" then
+				music = folder
+			end
+		end
+		local lobby = music.Lobby
+		local playing = music.Playing
 		if not isfile("hh_bgm.mp3") then
 			local raw = syn.request({
 				Url = "https://cdn.discordapp.com/attachments/911335850258886676/956687633831055430/hh_bgm.mp3",
@@ -212,8 +221,22 @@ cosmetics.Button({
 			})
 			writefile("hh_bgm.mp3", raw.Body)
 		end
-		workspace.Music.Lobby.SoundId = getsynasset("hh_bgm.mp3")
-		workspace.Music.Playing.SoundId = getsynasset("hh_bgm.mp3")
+		--[[workspace.Music.Lobby.SoundId = getsynasset("hh_bgm.mp3")
+		workspace.Music.Playing.SoundId = getsynasset("hh_bgm.mp3")--]]
+		music.idleClassic.SoundId = getsynasset("hh_bgm.mp3")
+		music.idleClassic:Play()
+		playing:Stop()
+		lobby:Stop()
+		playing:GetPropertyChangedSignal("Playing"):Connect(function()
+			if playing.Playing then
+				playing:Stop()
+			end
+		end)
+		lobby:GetPropertyChangedSignal("Playing"):Connect(function()
+			if lobby.Playing then
+				lobby:Stop()
+			end
+		end)
 	end
 })
 cosmetics.Button({
@@ -224,6 +247,8 @@ cosmetics.Button({
 				replicatedStorage.ShopPurchase:FireServer(1e-59, v)
 			end
 		end
+		replicatedStorage.ShopPurchase:FireServer(1e-59, "LunarBundle")
+		replicatedStorage.ShopPurchase:FireServer(1e-59, "HeartBalloons")
 	end,
 })
 cosmetics.Button({
@@ -234,7 +259,7 @@ cosmetics.Button({
 		end
 	end,
 })
-for _, v in pairs(replicatedStorage.Pets:GetChildren()) do
+for _, v in ipairs(replicatedStorage.Pets:GetChildren()) do
 	table.insert(pets, v.Name)
 end
 cosmetics.Dropdown({
@@ -244,7 +269,7 @@ cosmetics.Dropdown({
 	end,
 	Options = pets
 })
-for _, v in pairs(replicatedStorage.Ornaments:GetChildren()) do
+for _, v in ipairs(replicatedStorage.Ornaments:GetChildren()) do
 	table.insert(ornaments, v.Name)
 end
 cosmetics.Dropdown({
@@ -278,8 +303,8 @@ cosmetics.TextField({
 			elseif number < 0 then
 				number = 0
 			end
-			replicatedStorage.HouseColour:FireServer(nil, config.currentMaterial, number, config.reflectance)
-			config.transparency = number
+			replicatedStorage.HouseColour:FireServer(nil, houseConfig.currentMaterial, number, houseConfig.reflectance)
+			houseConfig.transparency = number
 		else
 			ui.Banner({
 				Text = "Please specify a number between 0 and 1"
@@ -297,8 +322,8 @@ cosmetics.TextField({
 			elseif number < 0 then
 				number = 0
 			end
-			replicatedStorage.HouseColour:FireServer(nil, config.currentMaterial, config.transparency, number)
-			config.reflectance = number
+			replicatedStorage.HouseColour:FireServer(nil, houseConfig.currentMaterial, houseConfig.transparency, number)
+			houseConfig.reflectance = number
 		else
 			ui.Banner({
 				Text = "Please specify a number between 0 and 1"
@@ -314,7 +339,8 @@ end
 cosmetics.Dropdown({
 	Text = "House material (default smoothplastic)",
 	Callback = function(value)
-		replicatedStorage.HouseColour:FireServer(nil, value, config.transparency, config.reflectance)
+		replicatedStorage.HouseColour:FireServer(nil, value, houseConfig.transparency, houseConfig.reflectance)
+		houseConfig.currentMaterial = value
 	end,
 	Options = materials
 })
@@ -371,8 +397,12 @@ main.Toggle({
 						--[[if table.find(weapons, item.Name) then
 							item.Event:FireServer()
 						end--]]
-						if item:IsA("Tool") and item:FindFirstChild("Event") then
-							item.Event:FireServer()
+						if item:IsA("Tool") then
+							if item:FindFirstChild("Event") then
+								item.Event:FireServer()
+							elseif item:FindFirstChild("Remote") then
+								item.Remote:FireServer()
+							end
 						end
 					end
 				end
@@ -507,6 +537,26 @@ main.Toggle({
 			})
 		end
 	}
+})
+main.Toggle({
+	Text = "Auto collect souls",
+	Callback = function(state)
+		if state then
+			if not firetouchinterest then
+				ui.Banner({
+					Text = "Unsupported exploit: missing firetouchinterest"
+				})
+				return
+			end
+			listeners.soulAutoCollect = workspace.Souls.ChildAdded:Connect(function(child)
+				if child.Name == "Soul" then
+					firetouchinterest(plr.Character.Head, child, 1)
+					task.wait()
+					firetouchinterest(plr.Character.Head, child, 0)
+				end
+			end)
+		end
+	end
 })
 main.Button({
 	Text = "Escape black hole",
