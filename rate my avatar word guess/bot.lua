@@ -1,6 +1,9 @@
 local plrs = game:GetService("Players")
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local chatService = game:GetService("TextChatService")
 local lplr = plrs.LocalPlayer
-local boothUpdate = game:GetService("ReplicatedStorage").CustomiseBooth
+local boothUpdate = replicatedStorage.CustomiseBooth
+local chatVersion = chatService.ChatVersion
 local messages = {
 	"Tip: Word detection is caps insensitive so no matter if you type like THIS, This, or tHiS I will detect what you chat.",
 	"Tip: Want me to shut up? Just type /mute "..lplr.Name.." and you will no longer see my messages.",
@@ -12,6 +15,14 @@ local chatted = {}
 local points = {}
 local rounds = 5
 local roundTime = 20
+local function chat(msg)
+	-- ik the new chat probably isnt going to release for a while but i dont want this to break when it does
+	if chatVersion == Enum.ChatVersion.LegacyChatService then
+		replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
+	else
+		chatService.TextChannels.RBXGeneral:SendAsync(msg)
+	end
+end
 local function randomCategory(categories: table)
     local array = {}
 	local name
@@ -74,7 +85,7 @@ end)
 task.spawn(function()
 	while true do
 		task.wait(120)
-		game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(messages[math.random(1, #messages)], "All")
+		chat(messages[math.random(1, #messages)])
 	end
 end)
 task.spawn(function()
@@ -90,7 +101,7 @@ task.spawn(function()
 			if part.Parent:FindFirstChildOfClass("Humanoid") and part.Parent.Name ~= lplr.Name then
 				local name = part.Parent.Name
 				boothUpdate:FireServer("AddBlacklist", name)
-				game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer("Don't block the sign, "..name..".", "All")
+				chat("Don't block the sign, "..name..".")
 				task.wait(2)
 				boothUpdate:FireServer("RemoveBlacklist", name)
 				break
