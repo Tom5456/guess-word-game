@@ -1,21 +1,47 @@
 # Horrific Anti-cheat
 a script for [Horrific Housing](https://www.roblox.com/games/263761432/Horrific-Housing)
 
-features:
-- give u all free items
-- give u 1000 pet eggs
-- access to every cosmetic in the game
-- player esp
+i've added every idea i can think of so this probably wont get anymore features until a new good update for the ~~game~~ experience releases
+
+main
+- no melee weapon cooldown
 - anti sans
-- autofarm
-- instant ko sword (anvil must be spawned in)
-- i cba to keep this up to date just check the script for any new features
+- anti maintenance
+- anti paranoia
+- delete sweeper (sweeper gamemode)
+- delete lava (lavagamemode)
+- delete flood
+- delete slime
+- delete ice spike
+- delete gas
+- safety net
+- anti gun damage
+
+fun
+- ko sword
+- delete all spleef tiles (spleef gamemode)
+- trigger all mines
+- open all doors
+- open vending machine
+- potion
+- annoy everyone
+
+cosmetics
+- use old background music
+- give all obtainable items
+- get 1000 eggs
+- equip any pet
+- equip any ornament
+- change house transparency
+- change house reflectance
+- change house material
+- change house colour
 ```lua
 loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/Horrific%20Anti-cheat/horrificAnticheat.lua",true))()
 ```
 
 # Horrific Autofarm
-horrific anticheat's autofarm but without a gui or toggle [Horrific Housing](https://www.roblox.com/games/263761432/Horrific-Housing)
+autofarm
 
 what this script does:
 1. Create a platform in a random position (math.random(240, 580), math.random(120, 550), math.random(240, 580) and puts it into the Workspace
