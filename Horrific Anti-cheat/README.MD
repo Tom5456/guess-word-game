@@ -41,7 +41,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scr
 ```
 
 # Horrific Autofarm
-autofarm
+autofarm that wont get updates
 
 what this script does:
 1. Create a platform in a random position (math.random(240, 580), math.random(120, 550), math.random(240, 580) and puts it into the Workspace
