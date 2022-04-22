@@ -5,6 +5,7 @@ local Notification = require(
 )
 local plr = game:GetService("Players").LocalPlayer
 local remote = replicatedStorage.Knit.Services.PixelGeneratorService.RF.DrawPixel
+local head = plr.Character.Head
 local thumb = "rbxthumb://type=AvatarHeadShot&id="..plr.UserId.."&w=420&h=420"
 local drawingExists = false
 local pixels = nil
@@ -40,7 +41,13 @@ if not drawingExists then
 end
 for _, pixel in pairs(pixels) do
 	if pixel.Name == "Part" and pixel.Transparency == 0 and pixel.Texture.Transparency < 1 then
-		remote:InvokeServer(pixel)
+		if pixel.Texture.Transparency == 0 then
+			firetouchinterest(head, pixel, 1)
+			task.wait()
+			firetouchinterest(head, pixel, 0)
+		elseif pixel.Texture.Transparency == 0.75 then
+			remote:InvokeServer(pixel)
+		end
 	end
 end
 notify("Drawing finished!", Color3.fromRGB(0, 255, 0))
