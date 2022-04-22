@@ -41,7 +41,6 @@ end
 for _, pixel in pairs(pixels) do
 	if pixel.Name == "Part" and pixel.Transparency == 0 and pixel.Texture.Transparency < 1 then
 		remote:InvokeServer(pixel)
-		task.wait()
 	end
 end
 notify("Drawing finished!", Color3.fromRGB(0, 255, 0))
