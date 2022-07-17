@@ -3,20 +3,19 @@ local replicatedStorage = game:GetService("ReplicatedStorage")
 local chatService = game:GetService("TextChatService")
 local lplr = plrs.LocalPlayer
 local boothUpdate = replicatedStorage.CustomiseBooth
+local chatted = replicatedStorage:FindFirstChild("DefaultChatSystemChatEvents").OnMessageDoneFiltering
 local chatVersion = chatService.ChatVersion
 local messages = {
 	"Tip: Word detection is caps insensitive so no matter if you type like THIS, This, or tHiS I will detect what you chat.",
-	"Tip: Want me to shut up? Just type /mute "..lplr.Name.." and you will no longer see my messages.",
+	"Tip: Want me to shut up? Just type /mute " .. lplr.Name .. " and you will no longer see my messages.",
 	"Tip: If there is a tie, the winner is random.",
 	"You probably don't own an air fryer.",
 	"Players who spam every letter in one message have no skill and ruin the game for others.",
 }
-local chatted = {}
 local points = {}
 local rounds = 5
 local roundTime = 20
 local function chat(msg)
-	-- ik the new chat probably isnt going to release for a while but i dont want this to break when it does
 	if chatVersion == Enum.ChatVersion.LegacyChatService then
 		replicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(msg, "All")
 	else
@@ -24,13 +23,13 @@ local function chat(msg)
 	end
 end
 local function randomCategory(categories: table)
-    local array = {}
+	local array = {}
 	local name
-    for i in pairs(categories) do
-        table.insert(array, i)
-    end
-    local randomNum = math.random(1, #array)
-    return categories[array[randomNum]]
+	for i in pairs(categories) do
+		table.insert(array, i)
+	end
+	local randomNum = math.random(1, #array)
+	return categories[array[randomNum]]
 end
 local function sortLeaderboard()
 	local players = plrs:GetPlayers()
@@ -45,8 +44,8 @@ end
 local function displayLeaderboard()
 	local leaderboardTable = sortLeaderboard()
 	local leaderboard = "Leaderboard"
-	for i=1, 4, 1 do
-		leaderboard ..= "\n"..leaderboardTable[i].Name..": 💠 "..points[leaderboardTable[i].UserId]
+	for i = 1, 4, 1 do
+		leaderboard ..= "\n" .. leaderboardTable[i].Name .. ": 💠 " .. points[leaderboardTable[i].UserId]
 	end
 	boothUpdate:FireServer("Update", {
 		["DescriptionText"] = leaderboard,
@@ -66,7 +65,7 @@ local function displayLeaderboard()
 	end
 end
 local function trim(str)
-    return string.gsub(str, "^%s*(.-)%s*$", "%1")
+	return string.gsub(str, "^%s*(.-)%s*$", "%1")
 end
 local function updateSign(text: string, category: string, round: number, timeLeft: number, icon: number)
 	boothUpdate:FireServer("Update", {
@@ -97,11 +96,17 @@ task.spawn(function()
 		end
 	end
 	while true do
-		for _, part in pairs(game:GetService("Workspace"):GetPartBoundsInBox(myBooth.Banner.CFrame, myBooth.Banner.Size  + Vector3.new(0.5, -1, 0.5))) do
+		for _, part in
+			pairs(
+				game
+					:GetService("Workspace")
+					:GetPartBoundsInBox(myBooth.Banner.CFrame, myBooth.Banner.Size + Vector3.new(0.5, -1, 0.5))
+			)
+		do
 			if part.Parent:FindFirstChildOfClass("Humanoid") and part.Parent.Name ~= lplr.Name then
 				local name = part.Parent.Name
 				boothUpdate:FireServer("AddBlacklist", name)
-				chat("Don't block the sign, "..name..".")
+				chat("Don't block the sign, " .. name .. ".")
 				task.wait(2)
 				boothUpdate:FireServer("RemoveBlacklist", name)
 				break
@@ -115,8 +120,13 @@ while true do
 	for _, plr in pairs(plrs:GetPlayers()) do
 		points[plr.UserId] = 0
 	end
-	local words = game:GetService("HttpService"):JSONDecode(game:HttpGet("https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/rate%20my%20avatar%20word%20guess/words.json", true))
-	for round=1, rounds, 1 do
+	local words = game:GetService("HttpService"):JSONDecode(
+		game:HttpGet(
+			"https://raw.githubusercontent.com/swatTurret/roblox-scripts/main/rate%20my%20avatar%20word%20guess/words.json",
+			true
+		)
+	)
+	for round = 1, rounds, 1 do
 		roundStarted = true
 		local timeLeft = roundTime
 		local category = randomCategory(words)
@@ -131,35 +141,51 @@ while true do
 		local foundBy
 		print(word)
 		for _, v in pairs(splitWord) do
-			if v ~= " " then found ..= "_" else found ..= " " end
+			if v ~= " " then
+				found ..= "_"
+			else
+				found ..= " "
+			end
 		end
 		updateSign(found, category.name, round, timeLeft, 8836386671)
-		for _, plr in pairs(plrs:GetPlayers()) do
-			if plr ~= lplr then
-				chatted[plr] = plr.Chatted:Connect(function(message)
-					if roundStarted and wordFound == false and plr:DistanceFromCharacter(lplr.Character.Head.Position) <= 15 and string.lower(message) ~= "abcdefghijklmnopqrstuvwxyz" then -- "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz" works help
-						local trimmed = message
-						trim(trimmed)
-						if string.find(string.lower(trimmed), string.lower(word)) then -- string.find because we still want to accept the answer if theres trailing whitespace or something
-							points[plr.UserId] += 1
-							wordFound = true
-							foundBy = plr.Name
-						else
-							for _, item in pairs(string.split(string.lower(trimmed), "")) do
-								if table.find(loweredSplitWord, item) then
-									local splitFound = string.split(found, "")
-									splitFound[table.find(loweredSplitWord, item)] = splitWord[table.find(loweredSplitWord, item)]
-									found = ""
-									for _, letter in pairs(splitFound) do
-										found ..= letter
-									end
-								end
+
+		chatted.OnClientEvent:Connect(function(msgInfo, recipient)
+			if recipient ~= "All" then
+				return
+			end
+			local plr = plrs:FindFirstChild(msgInfo.FromSpeaker)
+			local message = msgInfo.Message
+
+			if
+				roundStarted
+				and wordFound == false
+				and plr:DistanceFromCharacter(lplr.Character.Head.Position) <= 15
+				and string.lower(message) ~= "abcdefghijklmnopqrstuvwxyz" -- "abcdefghijklmnopqrstuvwxyz abcdefghijklmnopqrstuvwxyz" works help
+			then
+				local trimmed = message
+				trim(trimmed)
+				if string.find(string.lower(trimmed), string.lower(word)) then -- string.find because we still want to accept the answer if theres trailing whitespace or something
+					points[plr.UserId] += 1
+					wordFound = true
+					foundBy = plr.Name
+				else
+					for _, item in pairs(string.split(string.lower(trimmed), "")) do
+						if table.find(loweredSplitWord, item) then
+							local splitFound = string.split(found, "")
+							splitFound[table.find(loweredSplitWord, item)] = splitWord[table.find(
+								loweredSplitWord,
+								item
+							)]
+							found = ""
+							for _, letter in pairs(splitFound) do
+								found ..= letter
 							end
 						end
 					end
-				end)
+				end
 			end
-		end
+		end)
+
 		repeat
 			task.wait(1)
 			timeLeft -= 1
@@ -167,14 +193,9 @@ while true do
 		until wordFound == true or timeLeft == 0
 		task.wait(0.5)
 		if wordFound then
-			updateSign(foundBy.." found the word! it was "..word, category.name, round, timeLeft, 7871748216)
+			updateSign(foundBy .. " found the word! it was " .. word, category.name, round, timeLeft, 7871748216)
 		else
-			updateSign("you ran out of time :(\n it was "..word, category.name, round, timeLeft, 8844520510)
-		end
-		for _, plr in pairs(plrs:GetPlayers()) do
-			if chatted[plr] then
-				chatted[plr]:Disconnect()
-			end
+			updateSign("you ran out of time :(\n it was " .. word, category.name, round, timeLeft, 8844520510)
 		end
 		task.wait(3)
 		displayLeaderboard()
@@ -183,8 +204,9 @@ while true do
 	local leaderboardTable = sortLeaderboard()
 	print(points[leaderboardTable[1].UserId])
 	boothUpdate:FireServer("Update", {
-		["DescriptionText"] = leaderboardTable[1].Name.." wins with 💠 "..points[leaderboardTable[1].UserId],
+		["DescriptionText"] = leaderboardTable[1].Name .. " wins with 💠 " .. points[leaderboardTable[1].UserId],
 		["ImageId"] = 5791881437,
 	})
 	task.wait(5)
 end
+
