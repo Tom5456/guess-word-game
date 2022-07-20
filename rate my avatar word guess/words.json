@@ -318,7 +318,7 @@
 		]
 	},
 	"animals": {
-		"name": "Animals (unfinished)",
+		"name": "Animals",
 		"words": [
 			"Dog",
 			"Cat",
@@ -332,7 +332,17 @@
 			"Sheep",
 			"Bull",
 			"Owl",
-			"Hedgehog"
+			"Hedgehog",
+			"Monkey",
+			"Ape",
+			"Chicken",
+			"Eagle",
+			"Goat",
+			"Guinea Pig",
+			"Koala",
+			"Meerkat",
+			"Owl",
+			"Ostrich"
 		]
 	},
 	"movies": {
