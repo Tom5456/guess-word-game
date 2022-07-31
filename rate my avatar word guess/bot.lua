@@ -14,7 +14,10 @@ local messages = {
 local points = {}
 local rounds = 5
 local roundTime = 20
-_G.useBoothSignAsRangeBase = true -- if false you must stay at your booth, but chat messages will be enabled
+
+if _G.useBoothSignAsRangeBase == nil then
+	_G.useBoothSignAsRangeBase = true -- if false you must stay at your booth, but chat messages will be enabled
+end
 
 local function getBooth()
 	for _, booth in pairs(game.Workspace:GetChildren()) do
@@ -253,3 +256,4 @@ while true do
 	end
 	task.wait(5)
 end
+
